@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Todo } from '../types';
 
 interface TodoListProps {
-  todoList: Todo[];
+  todos: Todo[];
   onDeleteTodo: (todoId: number) => void;
 }
 
-function TodoList({ todoList, onDeleteTodo }: TodoListProps) {
+const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo }) => {
   const handleDeleteTodo = (todoId: number) => {
     onDeleteTodo(todoId);
   };
@@ -15,7 +15,7 @@ function TodoList({ todoList, onDeleteTodo }: TodoListProps) {
     <div>
       <h1>TO-DO List</h1>
       <ul>
-        {todoList.map((todo) => (
+        {todos.map((todo) => (
           <li key={todo.id}>
             {todo.title} - {todo.isCompleted ? 'completed' : 'not completed'}
             <button onClick={() => handleDeleteTodo(todo.id)}>Delete</button>
@@ -24,7 +24,8 @@ function TodoList({ todoList, onDeleteTodo }: TodoListProps) {
       </ul>
     </div>
   );
-}
+};
 
 export default TodoList;
+
 

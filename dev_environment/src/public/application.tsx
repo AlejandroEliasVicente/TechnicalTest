@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { AppMountParameters, CoreStart } from '../../../src/core/public';
+import { AppMountParameters, CoreStart } from 'opensearch-dashboards/public'; 
 import { AppPluginStartDependencies } from './types';
 import { CustomPluginApp } from './components/app';
+
+
 
 export const renderApp = (
   { notifications, http }: CoreStart,
@@ -21,3 +23,4 @@ export const renderApp = (
 
   return () => ReactDOM.unmountComponentAtNode(element);
 };
+

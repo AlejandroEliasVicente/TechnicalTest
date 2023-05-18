@@ -67,27 +67,36 @@ export const CustomPluginApp = ({
 
   useEffect(() => {
     const fetchTodos = async () => {
-      const response = await fetch('/api/custom_plugin/todo');
-      const data = await response.json();
-      setTodos(data.todoList);
+      try {
+        const response = await fetch('/api/custom_plugin/todo');
+        const data = await response.json();
+        const todosData = data.todos.map((todo: any) => todo._source); // Extraer los TODOS del objeto de respuesta
+  
+        setTodos(todosData);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+      }
     };
+  
     fetchTodos();
   }, [addButtonClicked]);
 
-  function updateTODO(todos:Todo[]){
-    setTodos(todos)
-  }
 
   const handleDeleteTodo = async (todoId: number) => {
     try {
       await fetch(`/api/custom_plugin/todo/${todoId}`, {
         method: 'DELETE',
       });
+
       setTodos(todos.filter((todo) => todo.id !== todoId));
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
   };
+
+  function updateTODO(todos:Todo[]){
+    setTodos(todos)
+  }
   // Render the application DOM.
   // Note that `navigation.ui.TopNavMenu` is a stateful component exported on the `navigation` plugin's start contract.
   return (
@@ -121,7 +130,7 @@ export const CustomPluginApp = ({
                 <EuiPageContentBody>
                   <NewTodo onTodoAdded={handleTodoAdded} />
                   <EuiHorizontalRule />
-                  <TodoList todoList={todos} onDeleteTodo={handleDeleteTodo} />
+                  <TodoList todos={todos} onDeleteTodo={handleDeleteTodo} />
                 </EuiPageContentBody>
               </EuiPageContent>
             </EuiPageBody>

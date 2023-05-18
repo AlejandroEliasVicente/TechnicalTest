@@ -28,22 +28,27 @@ export function defineRoutes(router: IRouter) {
     },
     async (context, request, response) => {
       try {
-        const responseItems = await context.core.opensearch.client.asCurrentUser.search({
-          index: INDEX_PATTERN,
+        const existsIndex = await context.core.opensearch.client.asCurrentUser.indices.exists({
+          index: INDEX_PATTERN
         });
-        return response.ok({
-          body: {
-            todoList: responseItems.body.hits.hits.map((hit) => hit._source),
-          },
-        });
-      } catch (error) {
-        console.error(error);
-        return response.internalError({
-          body: {
-            message: 'An error occurred while retrieving TODOs.',
-          },
-        });
+        console.log(existsIndex.body);
+
+        if (!existsIndex.body) {
+          await context.core.opensearch.client.asCurrentUser.indices.create({
+            index: INDEX_PATTERN,
+          });
+        }
+      } catch (errExists) {
+        console.log(errExists);
       }
+      const responseItems = await context.core.opensearch.client.asCurrentUser.search({
+        index: INDEX_PATTERN
+      });
+      return response.ok({
+        body:{
+          todos:responseItems.body.hits.hits
+        }
+      })
     }
   );
 
