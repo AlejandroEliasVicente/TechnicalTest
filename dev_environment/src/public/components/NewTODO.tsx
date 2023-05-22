@@ -12,12 +12,13 @@ const NewTodo: React.FC<NewTodoProps> = ({ onTodoAdded }) => {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
-
+  const todoPost= {title:title};
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     console.log(title);
-    const todoPost= {title:title}
+    
     const response = await fetch('/api/custom_plugin/todo', {
       method: 'POST',
       headers: {
