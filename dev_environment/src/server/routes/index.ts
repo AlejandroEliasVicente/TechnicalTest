@@ -186,6 +186,56 @@ export function defineRoutes(router: IRouter) {
       }
     }
   );
+
+  //Endpoint para editar TODOS
+  router.put(
+    {
+      path: '/api/custom_plugin/todo/:id',
+      validate: {
+        params: schema.object({
+          id: schema.string(),
+        }),
+        body: schema.object({
+          title: schema.string(),
+          description: schema.string(),
+          isCompleted: schema.boolean(),
+        }),
+      },
+    },
+    async (context, request, response) => {
+      try {
+        const { id } = request.params;
+        const { title, description, isCompleted } = request.body;
+  
+        const updateResponse = await context.core.opensearch.client.asCurrentUser.update({
+          index: INDEX_PATTERN,
+          id: id,
+          body: {
+            doc: {
+              title: title,
+              description: description,
+              isCompleted: isCompleted,
+            },
+          },
+        });
+  
+        return response.ok({
+          body: {
+            message: 'TODO updated successfully!',
+            updatedTodo: updateResponse.body,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+        return response.internalError({
+          body: {
+            message: 'An error occurred while updating the TODO.',
+          },
+        });
+      }
+    }
+  );
+  
 }
 
 

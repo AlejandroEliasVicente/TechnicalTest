@@ -25,6 +25,8 @@ import TodoList from './ListarTODO';
 import NewTodo from './NewTODO';
 import DelTODO from './DelTODO';
 import { useEffectOnce } from 'react-use';
+import IsCompleted from './IsCompleted';
+
 
 interface CustomPluginAppDeps {
   basename: string;
@@ -130,6 +132,7 @@ export const CustomPluginApp = ({
                 <EuiPageContentBody>
                   <NewTodo onTodoAdded={handleTodoAdded} />
                   <EuiHorizontalRule />
+                  <IsCompleted todos={todos} onUpdateTodos={updateTODO} />
                   <TodoList todos={todos} onDeleteTodo={handleDeleteTodo} />
                 </EuiPageContentBody>
               </EuiPageContent>
