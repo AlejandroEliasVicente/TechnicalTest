@@ -1,6 +1,7 @@
 import { schema } from '@osd/config-schema';
 import { IRouter } from '../../../../src/core/server';
 import { v4 as uuidv4 } from 'uuid';
+import { log } from 'console';
 
 const INDEX_PATTERN = 'wazuh-test';
 
@@ -56,7 +57,7 @@ export function defineRoutes(router: IRouter) {
 
   router.post(
     {
-      path: '/api/custom_plugin/todo',
+      path: '/api/custom_plugin/newtodo',
       validate: {
         body: schema.object({
           title: schema.string(),
@@ -65,24 +66,36 @@ export function defineRoutes(router: IRouter) {
     },
     async (context, request, response) => {
       try {
-        const newTodo = {
-          id: uuidv4(), // Generar un ID único usando la biblioteca uuid
-          title: request.body.title,
-          isCompleted: false,
+        const { title } = request.body;
+  
+        // Generar un ID único
+        const id = uuidv4();
+  
+        // Crear el objeto TODO con el ID generado
+        const todoSource = {
+          id,
+          title,
+          isCompleted: false
         };
   
-        const createResponse = await context.core.opensearch.client.asCurrentUser.create({
+        // Guardar el TODO en la base de datos
+        const createResponse = await context.core.opensearch.client.asCurrentUser.index({
+          id:id,
+          refresh: true,
           index: INDEX_PATTERN,
-          id: newTodo.id, // Proporcionar el ID único en la solicitud de creación
-          body: newTodo,
+          body: todoSource
         });
   
-        return response.ok({
-          body: {
-            message: 'New TODO created successfully!',
-            newTodo: createResponse.body,
-          },
-        });
+        if (createResponse.statusCode === 201) {
+          return response.ok({
+            body: {
+              message: 'New TODO created successfully!',
+              newTodo: todoSource,
+            },
+          });
+        } else {
+          throw new Error('An error occurred while creating a new TODO.');
+        }
       } catch (error) {
         console.error(error);
         return response.internalError({
@@ -94,58 +107,13 @@ export function defineRoutes(router: IRouter) {
     }
   );
   
+  
 
   // Endpoint para establecer los elementos TO-DO como completados
 
   router.put(
     {
-      path: '/api/custom_plugin/todo/completed',
-      validate: {
-        body: schema.object({
-          ids: schema.arrayOf(schema.string()),
-        }),
-      },
-    },
-    async (context, request, response) => {
-      try {
-        const { ids } = request.body;
-
-        const updateResponse = await context.core.opensearch.client.asCurrentUser.updateByQuery({
-          index: INDEX_PATTERN,
-          body: {
-            script: {
-              source: 'ctx._source.isCompleted = true',
-            },
-            query: {
-              terms: {
-                _id: ids,
-              },
-            },
-          },
-        });
-
-        return response.ok({
-          body: {
-            message: 'TODOs updated successfully!',
-            updatedTodos: updateResponse.body,
-          },
-        });
-      } catch (error) {
-        console.error(error);
-        return response.internalError({
-          body: {
-            message: 'An error occurred while updating TODOs.',
-          },
-        });
-      }
-    }
-  );
-
-  // Endpoint para eliminar TODOs
-
-  router.delete(
-    {
-      path: '/api/custom_plugin/todo/:id',
+      path: '/api/custom_plugin/todo/{id}/complete',
       validate: {
         params: schema.object({
           id: schema.string(),
@@ -155,18 +123,84 @@ export function defineRoutes(router: IRouter) {
     async (context, request, response) => {
       try {
         const { id } = request.params;
-
-        const deleteResponse = await context.core.opensearch.client.asCurrentUser.delete({
+  
+        // Verificar si el TODO existe en la base de datos
+        const todoResponse = await context.core.opensearch.client.asCurrentUser.get({
           index: INDEX_PATTERN,
           id: id,
         });
+  
+        if (!todoResponse.body.found) {
+          return response.notFound({
+            body: {
+              message: 'No TODO was found with the specified ID.',
+            },
+          });
+        }
+  
+        // Actualizar el estado del TODO como completado
+        const updateResponse = await context.core.opensearch.client.asCurrentUser.update({
+          refresh: true,
+          index: INDEX_PATTERN,
+          id: id,
+          body: {
+            doc: {
+              isCompleted: true,
+            },
+          },
+        });
+  
+        if (updateResponse.statusCode === 200) {
+          return response.ok({
+            body: {
+              message: 'TODO marked as completed successfully!',
+            },
+          });
+        } else {
+          throw new Error('An error occurred while marking the TODO as completed.');
+        }
+      } catch (error) {
+        console.error(error);
+        return response.internalError({
+          body: {
+            message: 'An error occurred while marking the TODO as completed.',
+          },
+        });
+      }
+    }
+  );
+  
 
+  // Endpoint para eliminar TODOs
+
+  router.delete(
+    {
+      path: '/api/custom_plugin/todo/{id}',
+      validate: {
+        params: schema.object({
+          id: schema.string(),
+        }),
+      },
+    },
+    
+    async (context, request, response) => {
+      console.log("hola")
+      try {
+        const { id } = request.params;
+
+        const deleteResponse = await context.core.opensearch.client.asCurrentUser.delete({
+          refresh:true,
+          index: INDEX_PATTERN,
+          id: id,
+        });
+        
         if (deleteResponse.statusCode === 200) {
           return response.ok({
             body: {
               message: 'TODO deleted successfully!',
             },
           });
+  
         } else if (deleteResponse.statusCode === 404) {
           return response.notFound({
             body: {
@@ -190,7 +224,7 @@ export function defineRoutes(router: IRouter) {
   //Endpoint para editar TODOS
   router.put(
     {
-      path: '/api/custom_plugin/todo/:id',
+      path: '/api/custom_plugin/todo/{id}',
       validate: {
         params: schema.object({
           id: schema.string(),
@@ -208,6 +242,7 @@ export function defineRoutes(router: IRouter) {
         const { title, description, isCompleted } = request.body;
   
         const updateResponse = await context.core.opensearch.client.asCurrentUser.update({
+          refresh:true,
           index: INDEX_PATTERN,
           id: id,
           body: {

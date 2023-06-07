@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import  {Todo} from '../types';
-
+import { EuiFieldText, EuiButtonIcon, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
+import { Todo } from '../types';
 
 interface NewTodoProps {
   onTodoAdded: (todo: Todo) => void;
@@ -12,24 +12,26 @@ const NewTodo: React.FC<NewTodoProps> = ({ onTodoAdded }) => {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
-  const todoPost= {title:title};
-  
+
+  const todoPost = { title: title };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     console.log(title);
-    
-    const response = await fetch('/api/custom_plugin/todo', {
+
+    const response = await fetch('/api/custom_plugin/newtodo', {
       method: 'POST',
       headers: {
-        "Content-type": "application/json; charset=UTF-8", "osd-xsrf": "true"
+        'Content-type': 'application/json; charset=UTF-8',
+        'osd-xsrf': 'true',
       },
-      body: JSON.stringify( todoPost ),
+      body: JSON.stringify(todoPost),
     });
 
     if (response.ok) {
       const newTodo = await response.json();
-      onTodoAdded(newTodo);
+      onTodoAdded(newTodo.newTodo);
       setTitle('');
     }
   };
@@ -38,11 +40,18 @@ const NewTodo: React.FC<NewTodoProps> = ({ onTodoAdded }) => {
     <div>
       <h2>New Todo</h2>
       <form onSubmit={handleSubmit}>
-        <input type="text" value={title} onChange={handleTitleChange} />
-        <button type="submit">Add Todo</button>
+        <EuiFlexGroup responsive={false} alignItems="center">
+          <EuiFlexItem>
+            <EuiFieldText value={title} onChange={handleTitleChange} />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiButtonIcon type="submit" iconType="plusInCircleFilled" aria-label="Add Todo" />
+          </EuiFlexItem>
+        </EuiFlexGroup>
       </form>
     </div>
   );
 };
 
 export default NewTodo;
+

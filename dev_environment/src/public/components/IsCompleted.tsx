@@ -1,58 +1,40 @@
-import React, { useState } from 'react';
-import { EuiButton, EuiCheckbox } from '@elastic/eui';
-import { Todo } from '../types';
+import React from 'react';
+import { EuiButtonIcon } from '@elastic/eui';
 
-interface SetCompletedProps {
-    todos: Todo[]; 
-    onUpdateTodos: (todos: Todo[]) => void;
-  }
-  
+interface CompleteTodoProps {
+  todoId: string;
+  onComplete: (todoId: string) => void;
+}
 
-const SetCompleted: React.FC<SetCompletedProps> = ({ todos, onUpdateTodos }) => {
-  const [isChecked, setIsChecked] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const CompleteTodo: React.FC<CompleteTodoProps> = ({ todoId, onComplete }) => {
+  const handleComplete = async () => {
+    try {
+      const response = await fetch(`/api/custom_plugin/todo/${todoId}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+          'osd-xsrf': 'true',
+        },
+      });
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsChecked(event.target.checked);
+      if (response.ok) {
+        onComplete(todoId);
+      } else {
+        console.error('Error marking todo as completed:', response.status);
+      }
+    } catch (error) {
+      console.error('Error marking todo as completed:', error);
+    }
   };
 
-  const handleSetCompleted = async () => {
-    setIsLoading(true);
-    const todoComp= {ids: todos};
-    try {
-        const response = await fetch('/api/custom_plugin/todo/completed', {
-          method: 'PUT',
-          body: JSON.stringify( todoComp ),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
-        if (response.ok) {
-            onUpdateTodos;
-        } else {
-          console.error('Error setting todos as completed:', response);
-        }
-      } catch (error) {
-        console.error('Error setting todos as completed:', error);
-      }
-  
-      setIsLoading(false);
-    };
   return (
-    <div>
-      <EuiCheckbox
-        id="set-completed-checkbox"
-        label="Marcar los TODOS seleccionados como completados"
-        checked={isChecked}
-        disabled={isLoading}
-        onChange={handleCheckboxChange}
-      />
-      <EuiButton onClick={handleSetCompleted} isLoading={isLoading}>
-        Establecer Completados
-      </EuiButton>
-    </div>
+    <EuiButtonIcon
+      iconType="check"
+      size="s"
+      aria-label="Mark as Completed"
+      onClick={handleComplete}
+    />
   );
 };
 
-export default SetCompleted;
+export default CompleteTodo;
