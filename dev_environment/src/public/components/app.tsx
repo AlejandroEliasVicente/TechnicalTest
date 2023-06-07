@@ -26,7 +26,7 @@ import NewTodo from './NewTODO';
 import DelTODO from './DelTODO';
 import { useEffectOnce } from 'react-use';
 import CompleteTodo from './IsCompleted';
-import EditTodo from './EditTODO';
+
 
 
 
@@ -44,7 +44,7 @@ export const CustomPluginApp = ({
   navigation,
 }: CustomPluginAppDeps) => {
   // Use React hooks to manage state.
-  const [timestamp, setTimestamp] = useState<string | undefined>();
+
   const [todos, setTodos] = useState<Todo[]>([]);
 
   const onClickHandler = () => {
@@ -60,11 +60,10 @@ export const CustomPluginApp = ({
     });
   };
 
-  let [addButtonClicked] = useState(new Date().getTime());
+const [timeStamp, setTimestamp]= useState<number>();
 
-  const handleTodoAdded = (newTodo: Todo) => {
-    const updatedTodos = [...todos, newTodo];
-          setTodos(updatedTodos);
+  const handleTodoAdded = () => {
+    setTimestamp(new Date().getTime());
   };
 
 
@@ -82,68 +81,20 @@ export const CustomPluginApp = ({
     };
   
     fetchTodos();
-  }, [addButtonClicked]);
+  }, [timeStamp]);
 
 
-  const handleDeleteTodo = async (todoId: number) => {
-    try {
-      setTodos(todos.filter((todo) => todo.id !== todoId));
-    } catch (error) {
-      console.error('Error deleting todo:', error);
-    }
+  const handleDeleteTodo = () => {
+    setTimestamp(new Date().getTime());
   };
 
-  const handleCompleteTodo = async (todoId: string) => {
-    try {
-      const response = await fetch(`/api/custom_plugin/todo/${todoId}/complete`, {
-        method: 'PUT',
-        headers: {
-          'Content-type': 'application/json; charset=UTF-8',
-          'osd-xsrf': 'true',
-        },
-      });
-  
-      if (response.ok) {
-        const updatedTodos = todos.map((todo) => {
-          if (todo.id === parseInt(todoId)) {
-            return { 
-              ...todo, 
-              isCompleted: true 
-            };
-          }
-          return todo;
-        });
-        setTodos(updatedTodos);
-      } else {
-        console.error('Error marking todo as completed:', response.status);
-      }
-    } catch (error) {
-      console.error('Error marking todo as completed:', error);
-    }
+  const handleCompleteTodo = () => {
+    setTimestamp(new Date().getTime());
   };
   
-  
-
-  function updateTODO(todos:Todo[]){
-    setTodos(todos)
-  }
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
-
-  const handleEditTodo = (todo: Todo) => {
-    setEditingTodo(todo);
+  const handleUpdateTodo =  () => {
+    setTimestamp(new Date().getTime());
   };
-
-  const handleUpdateTodo = (updatedTodo: Todo) => {
-    // Actualiza el estado de los todos con el todo actualizado
-    const updatedTodos = todos.map((todo) =>
-      todo.id === updatedTodo.id ? updatedTodo : todo
-    );
-    setTodos(updatedTodos);
-    // Finaliza la edición estableciendo editingTodo a null
-    setEditingTodo(null);
-  };
-  
-  
   // Render the application DOM.
   // Note that `navigation.ui.TopNavMenu` is a stateful component exported on the `navigation` plugin's start contract.
   return (
@@ -177,10 +128,7 @@ export const CustomPluginApp = ({
                 <EuiPageContentBody>
                   <NewTodo onTodoAdded={handleTodoAdded} />
                   <EuiHorizontalRule />
-                  <TodoList todos={todos} onDeleteTodo={handleDeleteTodo} onCompleteTodo={handleCompleteTodo} />      
-                  {editingTodo && (
-                    <EditTodo todo={editingTodo} onUpdateTodo={handleUpdateTodo} />
-                  )}
+                  <TodoList todos={todos} onDeleteTodo={handleDeleteTodo} onCompleteTodo={handleCompleteTodo} onUpdateTodo={handleUpdateTodo}/>      
                 </EuiPageContentBody>
               </EuiPageContent>
             </EuiPageBody>

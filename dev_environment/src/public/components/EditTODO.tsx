@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
+import {
+  EuiButtonIcon,
+  EuiModal,
+  EuiModalHeader,
+  EuiModalHeaderTitle,
+  EuiModalBody,
+  EuiModalFooter,
+  EuiButton,
+  EuiFieldText,
+  EuiForm,
+  EuiFormRow,
+  EuiPopover,
+  EuiSpacer,
+} from '@elastic/eui';
 import { Todo } from '../types';
 
 interface EditTodoProps {
   todo: Todo;
-  onUpdateTodo: (updatedTodo: Todo) => void;
+  onUpdateTodo: (title: string) => void;
 }
 
 const EditTodo: React.FC<EditTodoProps> = ({ todo, onUpdateTodo }) => {
+
   const [title, setTitle] = useState(todo.title);
-  const [isCompleted, setIsCompleted] = useState(todo.isCompleted);
 
-  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
-  };
-
-  const handleIsCompletedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsCompleted(event.target.checked);
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
   };
 
   const handleUpdateTodo = async () => {
@@ -28,13 +38,11 @@ const EditTodo: React.FC<EditTodoProps> = ({ todo, onUpdateTodo }) => {
         },
         body: JSON.stringify({
           title: title,
-          isCompleted: isCompleted,
         }),
       });
 
       if (response.ok) {
-        const updatedTodo = await response.json();
-        onUpdateTodo(updatedTodo.updatedTodo);
+        onUpdateTodo(title);
       } else {
         console.error('Error updating todo:', response.status);
       }
@@ -43,22 +51,39 @@ const EditTodo: React.FC<EditTodoProps> = ({ todo, onUpdateTodo }) => {
     }
   };
 
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
   return (
-    <div>
-      <h2>Edit Todo</h2>
-      <label>
-        Title:
-        <input type="text" value={title} onChange={handleTitleChange} />
-      </label>
-      <br />
-      <label>
-        Completed:
-        <input type="checkbox" checked={isCompleted} onChange={handleIsCompletedChange} />
-      </label>
-      <br />
-      <button onClick={handleUpdateTodo}>Update</button>
-    </div>
+    <>
+      <EuiPopover
+        button={
+          <EuiButtonIcon
+            iconType="pencil"
+            onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+            aria-label="Edit"
+          />
+        }
+        isOpen={isPopoverOpen}
+        closePopover={() => setIsPopoverOpen(false)}
+        ownFocus
+        initialFocus="[name=title]"
+      >
+        <div style={{ padding: '16px' }}>
+          <EuiForm>
+            <EuiFormRow label="Title">
+              <EuiFieldText name="title" value={title} onChange={handleTitleChange} />
+            </EuiFormRow>
+            <EuiSpacer size="s" />
+            <EuiButton onClick={() => setIsPopoverOpen(false)}>Cancel</EuiButton>
+            <EuiButton fill onClick={handleUpdateTodo}>
+              Save
+            </EuiButton>
+          </EuiForm>
+        </div>
+      </EuiPopover>
+    </>
   );
+
 };
 
 export default EditTodo;

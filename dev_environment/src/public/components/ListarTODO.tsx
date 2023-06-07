@@ -1,16 +1,18 @@
-import React from 'react';
-import { EuiFlexGrid, EuiFlexItem, EuiText, EuiButtonIcon, EuiFlexGroup, EuiSpacer } from '@elastic/eui';
+import React, { useState } from 'react';
+import { EuiFlexGrid, EuiFlexItem, EuiText, EuiFlexGroup, EuiSpacer } from '@elastic/eui';
 import { Todo } from '../types';
 import DeleteTodo from './DelTODO';
 import CompleteTodo from './IsCompleted';
+import EditTodo from './EditTODO';
 
 interface TodoListProps {
   todos: Todo[];
   onDeleteTodo: (todoId: number) => void;
   onCompleteTodo: (todoId: string) => void;
+  onUpdateTodo: (title: string) => void;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo }) => {
+const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo, onUpdateTodo }) => {
   const handleDeleteTodo = (todoId: number) => {
     onDeleteTodo(todoId);
   };
@@ -19,8 +21,14 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo
     onCompleteTodo(todoId);
   };
 
+  const handleUpdateTodo = (title: string) => {
+    onCompleteTodo(title);
+  };
+
   const completedTodos = todos.filter((todo) => todo.isCompleted);
   const uncompletedTodos = todos.filter((todo) => !todo.isCompleted);
+
+
 
   return (
     <div>
@@ -43,6 +51,9 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo
                     </EuiFlexItem>
                     <EuiFlexItem>
                       <DeleteTodo todoId={todo.id} onDelete={handleDeleteTodo} />
+                    </EuiFlexItem>
+                    <EuiFlexItem>
+                    <EditTodo todo={todo} onUpdateTodo={handleUpdateTodo}></EditTodo>
                     </EuiFlexItem>
                   </EuiFlexGroup>
                 </EuiFlexItem>
@@ -70,6 +81,9 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo
                     <EuiFlexItem>
                       <DeleteTodo todoId={todo.id} onDelete={handleDeleteTodo} />
                     </EuiFlexItem>
+                    <EuiFlexItem>
+                      <EditTodo todo={todo} onUpdateTodo={handleUpdateTodo}></EditTodo>
+                    </EuiFlexItem>
                   </EuiFlexGroup>
                 </EuiFlexItem>
               </EuiFlexGroup>
@@ -83,4 +97,3 @@ const TodoList: React.FC<TodoListProps> = ({ todos, onDeleteTodo, onCompleteTodo
 };
 
 export default TodoList;
-

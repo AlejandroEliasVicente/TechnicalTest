@@ -231,15 +231,13 @@ export function defineRoutes(router: IRouter) {
         }),
         body: schema.object({
           title: schema.string(),
-          description: schema.string(),
-          isCompleted: schema.boolean(),
         }),
       },
     },
     async (context, request, response) => {
       try {
         const { id } = request.params;
-        const { title, description, isCompleted } = request.body;
+        const { title } = request.body;
   
         const updateResponse = await context.core.opensearch.client.asCurrentUser.update({
           refresh:true,
@@ -248,8 +246,6 @@ export function defineRoutes(router: IRouter) {
           body: {
             doc: {
               title: title,
-              description: description,
-              isCompleted: isCompleted,
             },
           },
         });
